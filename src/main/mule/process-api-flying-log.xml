@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+    <http:listener-config name="process-api-flying-log-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="process-api-flying-log-config" api="resource::d402ad31-351f-407d-8b02-23af7a5b29cc:process-api-flying-log:1.0.2:raml:zip:process-api-flying-log.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <api-gateway:autodiscovery apiId="16150899" doc:name="API Autodiscovery" doc:id="ca4c381a-ed0a-48f7-8f87-ad615fb663e4" flowRef="process-api-flying-log-main" />
+	<flow name="process-api-flying-log-main">
+        <http:listener config-ref="process-api-flying-log-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="process-api-flying-log-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="process-api-flying-log-console">
+        <http:listener config-ref="process-api-flying-log-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="process-api-flying-log-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\flying-hours:application\json:process-api-flying-log-config">
+        <logger level="INFO" message="put:\flying-hours:application\json:process-api-flying-log-config" />
+    </flow>
+    <flow name="delete:\flying-hours:process-api-flying-log-config">
+        <logger level="INFO" message="delete:\flying-hours:process-api-flying-log-config" />
+    </flow>
+    <flow name="patch:\flying-hours:application\json:process-api-flying-log-config">
+        <logger level="INFO" message="patch:\flying-hours:application\json:process-api-flying-log-config" />
+    </flow>
+    <flow name="get:\flying-hours:process-api-flying-log-config">
+        <set-variable value='#[message.attributes.queryParams."PersonID?"]' doc:name="Set Variable" doc:id="365914fb-6037-4011-a396-7d8e57a82680" variableName="Person"/>
+		<choice doc:name="Choice" doc:id="2b691071-0730-40ca-ad57-de671667ca81" >
+			<when expression='#[message.attributes.queryParams."PersonID?" == "10000001"]'>
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="6e5a7fba-10fa-4028-abf8-76cdf2f3b9a9" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  PersonID: "10000001",
+  Name: "Edward Flyer",
+  Rank: "Flt Lt",
+  "Hours-Flew": 1590,
+  Flights: [
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1616",
+      FlightDate: "2020-05-11",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD123",
+      DayHoursFlew: 1,
+      NightHoursFlew: 0.3,
+      TotalHoursFlew: 1.3,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1610",
+      FlightDate: "2020-05-12",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 1,
+      NightHoursFlew: 0.0,
+      TotalHoursFlew: 1.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1003",
+      FlightDate: "2020-05-07",
+      Captain: false,
+      FirstPilot: true,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 1,
+      NightHoursFlew: 0.0,
+      TotalHoursFlew: 5.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }
+  ]
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[message.attributes.queryParams."PersonID?" == "10000002"]'>
+				<ee:transform doc:name="Transform Message" doc:id="0ce1a768-49f4-4067-a83c-a3d4a6b66d5f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  PersonID: "10000002",
+  Name: "Bobby Smith",
+  Rank: "Flt Lt",
+  "Hours-Flew": 1590,
+  Flights: [
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1616",
+      FlightDate: "2020-05-11",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD123",
+      DayHoursFlew: 7,
+      NightHoursFlew: 3,
+      TotalHoursFlew: 10,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1610",
+      FlightDate: "2020-05-12",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 1,
+      NightHoursFlew: 2.0,
+      TotalHoursFlew: 1.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1003",
+      FlightDate: "2020-05-07",
+      Captain: false,
+      FirstPilot: true,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 1,
+      NightHoursFlew: 4.0,
+      TotalHoursFlew: 5.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }
+  ]
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[message.attributes.queryParams."PersonID?" == "10000003"]'>
+				<ee:transform doc:name="Transform Message" doc:id="46ff2572-e3bc-4107-ac28-8b7f143589dd" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  PersonID: "10000003",
+  Name: "Jed Jump",
+  Rank: "Flt Lt",
+  "Hours-Flew": 1590,
+  Flights: [
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1616",
+      FlightDate: "2020-05-11",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD123",
+      DayHoursFlew: 1,
+      NightHoursFlew: 1.3,
+      TotalHoursFlew: 2.3,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1610",
+      FlightDate: "2020-05-12",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 4,
+      NightHoursFlew: 4.0,
+      TotalHoursFlew: 8.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1003",
+      FlightDate: "2020-05-07",
+      Captain: false,
+      FirstPilot: true,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 1,
+      NightHoursFlew: 0.0,
+      TotalHoursFlew: 5.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }
+  ]
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression='#[message.attributes.queryParams."PersonID?" == "10000004"]'>
+				<ee:transform doc:name="Transform Message" doc:id="e610a2a7-a55d-40f9-9de9-fd612231385f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  PersonID: "10000004",
+  Name: "Fred Flintoff",
+  Rank: "Flt Lt",
+  "Hours-Flew": 1590,
+  Flights: [
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1616",
+      FlightDate: "2020-05-11",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD123",
+      DayHoursFlew: 2,
+      NightHoursFlew: 0.5,
+      TotalHoursFlew: 1.5,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1610",
+      FlightDate: "2020-05-12",
+      Captain: true,
+      FirstPilot: false,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 1,
+      NightHoursFlew: 0.0,
+      TotalHoursFlew: 1.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }, 
+    {
+      FlightID: "1eb3zzz34e502sdasd912a1003",
+      FlightDate: "2020-05-07",
+      Captain: false,
+      FirstPilot: true,
+      AircraftType: "Hawk ",
+      TailNumber: "ZD124",
+      DayHoursFlew: 2,
+      NightHoursFlew: 3.0,
+      TotalHoursFlew: 5.0,
+      Duty: " Transit Flight ",
+      Image: ""
+    }
+  ]
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+		</choice>
+    </flow>
+    <flow name="post:\flying-hours:application\json:process-api-flying-log-config">
+        <logger level="INFO" message="post:\flying-hours:application\json:process-api-flying-log-config" />
+    </flow>
+</mule>
